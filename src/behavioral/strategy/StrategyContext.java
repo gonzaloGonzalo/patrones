@@ -3,21 +3,34 @@ import java.util.Map;
 
 public class StrategyContext {
 
-    private static Map<String, Class> MAP_STRATEGY = new HashMap<String, Class>();
-    static {
-        Values[] values = Values.values();
-        for(Values val : values){
-            String className = val.getValue();
-            try {
-                MAP_STRATEGY.put(className, Class.forName(className));
-            }
-            catch (ClassNotFoundException ex){
-                ex.printStackTrace();
-            }
+    private static Map<String, Class> EVENT_CLASS;
+
+    public enum Event {
+        CASH_PAYMENT("cash payment"),
+        PAYPAL_PAYMENT("pay pal payment");
+
+        private String event;
+
+        Event(String event){
+            this.event = event;
+        }
+
+        public String getValue(){
+            return event;
         }
     }
 
-    public static BasePayment getStrategy(String key) throws Exception{
-        return (BasePayment) MAP_STRATEGY.get(key).newInstance();
+    static {
+        EVENT_CLASS = new HashMap<String, Class>();
+        EVENT_CLASS.put(Event.CASH_PAYMENT.getValue(), CashPayment.class);
+        EVENT_CLASS.put(Event.PAYPAL_PAYMENT.getValue(), PayPalPayment.class);
+    }
+
+    public static Class getClassForEvent(String event){
+        return EVENT_CLASS.get(event);
+    }
+
+    public static BasePayment getStrategy(String event) throws Exception{
+        return (BasePayment) getClassForEvent(event).newInstance();
     }
 }
